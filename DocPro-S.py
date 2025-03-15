@@ -55,7 +55,8 @@ def add_document_to_repository(path, filename):
     shutil.move(src, dst)
 
 def view_document(path):
-    file = open(path, 'r')
+    new_path = os.getcwd() + "//File_repository//" + path
+    file = open(new_path, 'r')
     readable_file = file.read()
     word_count = word_counter(readable_file)
     if word_count > 200:
@@ -113,48 +114,41 @@ print("-" * len(welcome_message) + "\n")
 path = create_repos()
 
 running = True
-while running == True
+while running == True:
     current_files_string = "Current Files:"
     print(current_files_string + "\n" + ("-" * len(current_files_string)))
     view_documents(path)
-    print("Add document(a), Remove document (r), Dupblicate_document(d), Create document (c), Exit program (e)")
+    print("Add document(a), Remove document (r), Dupblicate_document(d), Create document (c), View Document (v), Exit program (e)")
     user_input = input("Control: ")
 
-    if user_input.lower() == a:
+    if user_input.lower() == "a":
         path = input("Enter path:")
         filename = input("Filename: ")
         add_document_to_repository(path, filename)
 
-    elif user_input.lower() == r:
+    elif user_input.lower() == "r":
         filename = input("Filename")
-        delete_document()
-    elif user_input.lower() == d:
+        delete_document(filename)
+
+    elif user_input.lower() == "d":
         filename = input("Filename: ")
         new_filename = input("New_filename: ")
-        dupblicate_document()
-    elif user_input.lower() == c:
+        dupblicate_document(filename, new_filename)
+
+    elif user_input.lower() == "c":
         name = input("Name: ")
         string = input("String: ")
-        create_document()
-    elif user_input.lower() == e:
-        running == False
+        create_document(name, string)
+
+    elif user_input.lower() == "v":
+        filename = input("filename: ") + ".txt" 
+        view_document(filename)
+
+    elif user_input.lower() == "e":
+        running = False
 
     else:
         print("Input ERROR!!! Invalid Input")
-
-
-
-
-
-
-
-
-        
-
-
-#view_document("File_repository//Hello.txt")
-os.chdir("D://Code//Document Processing System//DocPro-S")
-dupblicate_document("Story.txt", "Story_2.txt")
 
 
 
