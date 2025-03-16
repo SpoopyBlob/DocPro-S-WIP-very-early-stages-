@@ -1,28 +1,14 @@
 #Rename variable names, I had a conflict that kept effecting view document which caused a crash
 
 import os
-import datetime
+from datetime import datetime
 import csv
 import shutil
 
 #Custom import that stores my classes
 import DocPro_Classes as DClass
 
-def create_repos():
-    path_repos = check_if_first()
-    if path_repos == True:
-        print("Enter the pathway of the desired location to store your repository.")
-        print("e.g. C:/Users/James/Documents\n")
-        path_repos = os.path.join(input("") + "DocPro-s")
-        write_user_path(path_repos)
-
-    os.makedirs(os.path.join(path_repos + "/File_Repository"), exist_ok=True)
-    os.makedirs(os.path.join(path_repos + "/Backup_Repository"), exist_ok=True)
-    os.makedirs(os.path.join(path_repos + "/Upload"), exist_ok=True)
-    os.chdir(path_repos)
-    return path_repos
-    
-#Checks if the user has the filepaths
+#checks if this is the first time running the application/if the user has the DocPro-S repo already
 def check_if_first():
     #creates file if it dosen't already exist
     file = open("user_path.txt", "a")
@@ -32,11 +18,67 @@ def check_if_first():
     read = file.read()
     if len(read) == 0:
         file.close()
-        return True
+        return False
     else:
         file.close()
         return read
+
+def create_repos():
+    path_repos = check_if_first()
+    if path_repos == False:
+        while True:
+            print("Enter the pathway of the desired location to store your repository.")
+            print("e.g. C:/Users/James/Documents\n")
+            path_repos = input("Path: ")
+            if os.path.exists(path_repos):
+                try:
+                    path_repos = os.path.join(path_repos, "DocPro-s")
+                    write_user_path(path_repos)
+                    create_file_manifesto(path_repos)
+                    break
+                except OSError as e:
+                    print(f"Error, please check you have permissions to write to this directory... {path_repos}")
+                    print(f"Error: {e}")
+                break
+            else:
+                print(f"Invalid path, the following path dose not exist {path_repos}")
+            
+
+    os.makedirs(os.path.join(path_repos + "/File_Repository"), exist_ok=True)
+    os.makedirs(os.path.join(path_repos + "/Backup_Repository"), exist_ok=True)
+    os.makedirs(os.path.join(path_repos + "/Upload"), exist_ok=True)
+    os.chdir(path_repos)
+    return path_repos
     
+def create_file_manifesto(path_repos):
+    manifesto_path = os.path.join(path_repos, "File_Manifesto.csv")
+    fieldnames = ["file_size", "filename", "path", "tags", "upload_date"]
+    with open(manifesto_path, 'w') as manifesto:
+        writer_object = csv.DictWriter(manifesto, fieldnames = fieldnames)
+        writer_object.writeheader()
+
+def add_tags():
+    print("Please input the tags you would like to associate with this document, seperating each tag with a comma.")
+    print("For example: Coding,VSCode,The Internet, would turn into --> coding | vscode | the internet")
+    tags = input("Tags: ")
+    split_tags = tags.split(",")
+    return split_tags
+
+#Implament the undo functionality for the manifesto 
+def upload_to_file_manifesto(filename, path):
+    fieldnames = ["file_size", "filename", "path", "tags", "upload_date"]
+    row_to_add = {
+        "file_size": os.path.getsize(path),
+        "filename": filename,
+        "path": path,
+        "tags": add_tags(),
+        "upload_date": datetime.now()
+    }
+    
+    with open("File_Manifesto.csv", 'a') as manifesto:
+        writer_object = csv.DictWriter(manifesto, fieldnames = fieldnames)
+        writer_object.writerow(row_to_add)
+        
 def write_user_path(path):
     file = open("user_path.txt", "w")
     file.write(path)
@@ -54,8 +96,12 @@ def read_document(file_name):
 def add_to_repos(src_path, filename):
     src = src_path
     dst = os.path.join(os.getcwd(), "File_Repository", filename + ".txt")
-    shutil.move(src, dst)
-    return "add_to_repos", src, dst, filename
+    if os.path.exists(src):
+        shutil.move(src, dst)
+        upload_to_file_manifesto(filename, dst)
+        return "add_to_repos", src, dst, filename
+    else:
+        print(f"This path dose not exist {src}")
 
 def undo_add_to_repos(src, dst, filename):
     shutil.move(src, dst)
@@ -63,28 +109,30 @@ def undo_add_to_repos(src, dst, filename):
 
 
 def user_read_document(path_to_doc):
-    new_path = os.path.join(os.getcwd(), "File_repository", path_to_doc)
-    file = open(new_path, 'r')
-    readable_file = file.read()
-    word_count = word_counter(readable_file)
-    if word_count > 200:
-        list_of_words = readable_file.split()
+    path_to_doc = os.path.join(os.getcwd(), "File_repository", path_to_doc)
+    if os.path.exists(path_to_doc):
+        file = open(path_to_doc, 'r')
+        readable_file = file.read()
+        word_count = word_counter(readable_file)
+        if word_count > 200:
+            list_of_words = readable_file.split()
         
+            list_to_print = []
+            for word in list_of_words:
+                if len(list_to_print) == 200:
+                    print(" ".join(list_to_print))
+                    list_to_print = []
+                    #Change later
+                    voidVar = input("\nType any character to view next page\n")
 
-        list_to_print = []
-        for word in list_of_words:
-            if len(list_to_print) == 200:
-                print(" ".join(list_to_print))
-                list_to_print = []
-                #Change later
-                voidVar = input("\nType any character to view next page\n")
+                list_to_print.append(word)
+        else: 
+            print(readable_file)
 
-            list_to_print.append(word)
-    
-    else: 
-        print(readable_file)
+        file.close()
+    else:
+        print(f"File dose not exist: {path_to_doc}")
 
-    file.close()
 
 def word_counter(string):
     word_count = len(string.split())
@@ -92,30 +140,58 @@ def word_counter(string):
 
 def create_document(name, string):
     path_create = os.path.join(os.getcwd(), "File_repository", name + ".txt")
+    if os.path.exists(path_create):
+        print(f"A document with the same name already exists: {path_create}")
+        return 
     with open (path_create, 'w') as file_to_write:
         file_to_write.write(string)
     return "create", path_create, name
 
 def delete_document(filename):
-    dst = os.path.join(os.getcwd(), "Backup_repository", filename + ".txt")
-    src = os.path.join(os.getcwd(), "File_repository", filename + ".txt")
-    shutil.move(src, dst)
-    return "del", src, dst, filename
+        dst = os.path.join(os.getcwd(), "Backup_repository", filename + ".txt")
+        src = os.path.join(os.getcwd(), "File_repository", filename + ".txt")
+        if os.path.exists(src):
+            shutil.move(src, dst)
+            return "del", src, dst, filename
+        else:
+            print(f"This document dose not exist {src}")
+            return 
 
 def dupblicate_document(filename, new_filename):
-    path_dub = os.path.join(os.getcwd(), "File_repository")
-    document = open(os.path.join(path_dub, filename + ".txt"), 'r')
-    document_contents = document.read()
-    document.close()
+    path_dub = os.path.join(os.getcwd(), "File_repository", filename + ".txt")
+    if os.path.exists(path_dub):
+        document = open(path_dub, 'r')
+        document_contents = document.read()
+        document.close()
+    else:
+        print(f"This document dose not exist {path_dub}")
+        return None
 
-    path_dub = os.path.join(os.getcwd(), "File_repository")
-    with open(os.path.join(path_dub, new_filename + ".txt"), 'w') as dub_file:
-        dub_file.write(document_contents)
+    path_dub = os.path.join(os.getcwd(), "File_repository", new_filename + ".txt")
+    if os.path.exists(path_dub):
+        print(f"A document with the name already exists {path_dub}")
+        return None
+    else:
+        with open(path_dub, 'w') as dub_file:
+            dub_file.write(document_contents)
 
-    return "dub", path_dub, new_filename
+        return "dub", path_dub, new_filename
 
 def rename_document(filename, new_filename):
-    os.rename(os.path.join("File_repository", filename + ".txt"), os.path.join("File_repository", new_filename + ".txt"))
+    src = os.path.join("File_repository", filename + ".txt")
+    dst = os.path.join("File_repository", new_filename + ".txt")
+    
+    if os.path.exists(src):
+        pass
+    else:
+        print(f"This path dose not exist: {src}")
+        return None
+    
+    if os.path.exists(dst):
+        print(f"A file with this name already exists: {dst}")
+        return None
+        
+    os.rename(src, dst)
     return "rename", filename, new_filename
 
 #temp function until manifesto is created
@@ -127,8 +203,8 @@ def view_documents(path_view):
 welcome_message = "Welcome to DocPro-s"
 print(welcome_message)
 print("-" * len(welcome_message) + "\n")
-path = create_repos()
 
+path = create_repos()
 undo = DClass.Undo_Redo()
 redo = DClass.Undo_Redo()
 
@@ -137,31 +213,48 @@ while running == True:
     current_files_string = "Current Files:"
     print(current_files_string + "\n" + ("-" * len(current_files_string)))
     view_documents(path)
+    
     print("Add document(1), Remove document (2), Dupblicate_document(3), Create document (4), View Document (5), Rename Document (6), Undo (7), Redo (8) Exit program (e)")
     user_input = input("Control: ")
 
     if user_input == "1":
         src_path = input("Enter path: ")
         filename = input("Filename: ")
-        act, prev_path, new_path, filename = add_to_repos(src_path, filename)
-        undo.push(act = act, prev_path = prev_path, path = new_path, filename = filename)
+        results = add_to_repos(src_path, filename)
+        if results == None:
+            pass
+        else:
+            act, prev_path, new_path, filename = results
+            undo.push(act = act, prev_path = prev_path, path = new_path, filename = filename)
     
     elif user_input == "2":
         filename = input("Filename: ")
-        act, prev_path, new_path, filename = delete_document(filename)
-        undo.push(act = act, prev_path = prev_path, path = new_path, filename = filename)
+        results = delete_document(filename)
+        if results == None:
+            pass
+        else:
+            act, prev_path, new_path, filename = results
+            undo.push(act = act, prev_path = prev_path, path = new_path, filename = filename)
 
     elif user_input == "3":
         filename = input("Filename: ")
         new_filename = input("New_filename: ")
-        act, new_path, filename = dupblicate_document(filename, new_filename)
-        undo.push(act = act, path = new_path, filename = filename)
+        results = dupblicate_document(filename, new_filename)
+        if results == None:
+            pass
+        else:
+            act, new_path, filename = results
+            undo.push(act = act, path = new_path, filename = filename)
         
     elif user_input == "4":
         name = input("Name: ")
         string = input("String: ")
-        act, new_path, filename = create_document(name, string)
-        undo.push(act = act, path = new_path, filename = filename)
+        results = create_document(name, string)
+        if results == None:
+            pass
+        else:
+            act, new_path, filename = results
+            undo.push(act = act, path = new_path, filename = filename)
         
     elif user_input == "5":
         filename = input("filename: ") + ".txt" 
@@ -170,12 +263,18 @@ while running == True:
     elif user_input == "6":
         filename = input("Filename: ")
         new_filename = input("New_Filename: ")
-        act, prev_name, new_name = rename_document(filename, new_filename)
-        undo.push(act = act, prev_name = prev_name, filename = new_name)
+        results = rename_document(filename, new_filename)
+        if results == None:
+            pass
+        else:
+            act, prev_name, new_name = results
+            undo.push(act = act, prev_name = prev_name, filename = new_name)
 
     elif user_input == "7":
+        if undo.peek() == None:
+            print("Nothing to undo")
+            continue
         attributes = undo.peek().get_attributes()
-        print(attributes["filename"], attributes["prev_name"])
 
         if attributes["action"] == "create":
             act, prev_path, new_path, filename = delete_document(attributes["filename"])
@@ -203,8 +302,10 @@ while running == True:
             redo.push(act = act, prev_path = prev_path, path = new_path, filename = filename)
 
     elif user_input == "8":
+        if redo.peek() == None:
+            print("Nothing to redo")
+            continue
         attributes = redo.peek().get_attributes()
-        print(attributes["filename"], attributes["prev_name"])
 
         if attributes["action"] == "create":
             act, prev_path, new_path, filename = delete_document(attributes["filename"])
