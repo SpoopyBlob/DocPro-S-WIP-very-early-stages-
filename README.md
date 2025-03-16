@@ -1,1 +1,1 @@
-Note: Some of my classes are not in opperation yet, they are of no use until i implement my features and therefor will contain errors. I quickly wrote them as a reminder to implament thease features.
+Note: Some of my classes are not in operation yet, they are of no use until I implement my features and will contain errors. I quickly wrote them as a reminder to implement these features.
