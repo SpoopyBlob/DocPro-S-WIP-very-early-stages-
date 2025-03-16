@@ -27,27 +27,6 @@ class Document_Node:
     def set_prev_node(self, prev_node):
         self.prev_node = prev_node
 
-class Action_node:
-    def __init__(self, action = None):
-        self.action = action
-        self.prev_action = None
-        self.next_action = None
-
-    def current_action(self):
-        return self.action
-    
-    def get_next_action(self):
-        return self.next_action
-    
-    def get_prev_action(self):
-        return self.prev_action
-    
-    def set_next_action(self, next_action):
-        self.next_action = next_action
-
-    def set_prev_action(self, prev_action):
-        self.prev_action = prev_action
-
 class Search_results():
 
     def __init__(self):
@@ -108,18 +87,53 @@ class Activity_Queue():
             self.head = head_to_remove.get_next_node()
             self.size -= 1
 
+class Undo_Redo_Node:
+
+    def __init__(self, act = None, filename = None, path = None, prev_name = None, prev_path = None, prev_node = None, next_node = None):
+        self.act = act
+        self.filename = filename
+        self.path = path
+        self.prev_name = prev_name
+        self.prev_path = prev_path
+        self.prev_node = prev_node
+        self.next_node = next_node
+
+    def get_attributes(self):
+        return {
+            "action": self.act,
+            "filename": self.filename,
+            "path": self.path,
+            "prev_name": self.prev_name,
+            "prev_path": self.prev_path
+        }
+
+    def set_prev_node(self, prev_node):
+        self.prev_node = prev_node
+
+    def get_prev_node(self):
+        return self.prev_node
+    
 class Undo_Redo:
     
-    def __init__(self):
+    def __init__(self, type = 1):
         self.top_item = None
 
     def peek(self):
-        return self.top_item.current_action()
-        
-    def undo(self):
-        item_to_remove = self.top_item
-        self.top_item = item_to_remove
+        return self.top_item
+          
+    def pop(self):
+        if self.top_item is not None:
+            node_to_remove = self.top_item
+            self.top_item = self.top_item.get_prev_node()
+            return node_to_remove
+        return None
 
-    def action(self, act):
-        node = Action_node(action = act)
+    def push(self, act = None, filename = None, path = None, prev_name = None, prev_path = None):
+        node = Undo_Redo_Node(act, filename, path, prev_name, prev_path)
+        if self.top_item is not None:
+            node.set_prev_node(self.top_item)
         self.top_item = node
+            
+
+
+
