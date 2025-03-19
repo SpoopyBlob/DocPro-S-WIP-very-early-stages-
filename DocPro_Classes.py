@@ -33,6 +33,9 @@ class Search_results():
         self.head_node = None
         self.tail_node = None
 
+    def add_to_search(self):
+        pass
+
     #get & set methods
     def get_head_node(self):
         return self.head_node
@@ -89,11 +92,13 @@ class Activity_Queue():
 
 class Undo_Redo_Node:
 
-    def __init__(self, act = None, filename = None, path = None, prev_name = None, prev_path = None, prev_node = None, next_node = None):
+    def __init__(self, act = None, filename = None, path = None, prev_name = None, prev_path = None, tags = None, prev_tags = None, prev_node = None, next_node = None):
         self.act = act
         self.filename = filename
         self.path = path
+        self.tags = tags
         self.prev_name = prev_name
+        self.prev_tags = prev_tags
         self.prev_path = prev_path
         self.prev_node = prev_node
         self.next_node = next_node
@@ -103,8 +108,11 @@ class Undo_Redo_Node:
             "action": self.act,
             "filename": self.filename,
             "path": self.path,
+            "tags": self.tags,
             "prev_name": self.prev_name,
-            "prev_path": self.prev_path
+            "prev_path": self.prev_path,
+            "prev_tags": self.prev_tags
+            
         }
 
     def set_prev_node(self, prev_node):
@@ -128,7 +136,7 @@ class Undo_Redo:
             return node_to_remove
         return None
 
-    def push(self, act = None, filename = None, path = None, prev_name = None, prev_path = None):
+    def push(self, act = None, filename = None, path = None, prev_name = None, prev_path = None, tags = None, prev_tags = None):
         node = Undo_Redo_Node(act, filename, path, prev_name, prev_path)
         if self.top_item is not None:
             node.set_prev_node(self.top_item)

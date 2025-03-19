@@ -1,4 +1,2 @@
-file_size,filename,path,tags,upload_date
-0,AB,D:\Code\Document Processing System\DocPro-s\File_Repository\AB.txt,"['Dog', 'Cat', 'Frog']",2025-03-16 22:11:44.346103
-1,A,D:\Code\Document Processing System\DocPro-s\File_Repository\A.txt,"['wasd', ' dwasd', ' dwad']",2025-03-16 22:15:35.794797
-1,A,D:\Code\Document Processing System\DocPro-s\File_Repository\A.txt,['Gay'],2025-03-16 22:33:01.973736
+id,file_size,filename,path,tags,upload_date,status
+e639bd35-a950-45d8-9bba-34a1a65085c6,3,Cat,D:\Code\Document Processing System\DocPro-s\File_Repository\03 2025\Cat.txt,"['Dog', '[', ""'"", 'c', 'a', 't', ""'"", ']']",,True
